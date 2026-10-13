@@ -1,3 +1,5 @@
+WARNING: This fork is Reactive Resume v4/v5 (Nx). A mistaken v6 vercel.json/package.json overlay may be present. Do not deploy this repo with Vercel Services expecting apps/web. Use https://github.com/reactive-resume/reactive-resume (Deploy button) or https://github.com/ilodhi/resume-builder-web after bootstrap instead.
+
 # Resume Builder (Adam Lodhi)
 
 Privacy-first **web** deployment of [Reactive Resume](https://github.com/reactive-resume/reactive-resume) v6 for [Adam Lodhi](https://github.com/ilodhi).
