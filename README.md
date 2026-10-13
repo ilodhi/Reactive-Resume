@@ -1,101 +1,132 @@
-![Reactive Resume](https://i.imgur.com/FFc4nyZ.jpg)
+# Resume Builder (Adam Lodhi)
 
-![App Version](https://img.shields.io/github/package-json/version/AmruthPillai/Reactive-Resume?label=version)
-[![Docker Pulls](https://img.shields.io/docker/pulls/amruthpillai/reactive-resume)](https://hub.docker.com/repository/docker/amruthpillai/reactive-resume)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/AmruthPillai)](https://github.com/sponsors/AmruthPillai)
-[![Crowdin](https://badges.crowdin.net/reactive-resume/localized.svg)](https://crowdin.com/project/reactive-resume)
-[![Discord](https://img.shields.io/discord/1173518977851473940?label=discord&link=https%3A%2F%2Fdiscord.gg%2FhzwkZbyvUW)](https://discord.gg/hzwkZbyvUW)
+Privacy-first **web** deployment of [Reactive Resume](https://github.com/reactive-resume/reactive-resume) v6 for [Adam Lodhi](https://github.com/ilodhi).
 
-# Reactive Resume
+Use it at your own Vercel URL. Your resumes live in **your** Neon Postgres + private Vercel Blob (+ Upstash Redis for coordination) — not on OpenAI, public S3, or third-party analytics.
 
-A free and open-source resume builder that simplifies the process of creating, updating, and sharing your resume.
+> **Windows offline launcher:** abandoned. Old scripts are under [`legacy/windows-launcher/`](./legacy/windows-launcher/) for reference only.
 
-### [Go to App](https://rxresu.me/) | [Docs](https://docs.rxresu.me/)
+---
 
-## Description
+## Why this stack
 
-Reactive Resume is a free and open-source resume builder that simplifies the process of creating, updating, and sharing your resume. With zero user tracking or advertising, your privacy is a top priority. The platform is extremely user-friendly and can be self-hosted in less than 30 seconds if you wish to own your data completely.
+Reactive Resume v6 **officially supports Vercel** (static frontend + Hono backend as Vercel Services). That keeps the full upstream feature set (editor, templates, PDF/DOCX/Markdown/JSON export, cover letters, job tracker, local accounts) without rewriting a Next.js clone.
 
-It's available in multiple languages and comes packed with features such as real-time editing, dozens of templates, drag-and-drop customisation, and integration with OpenAI for enhancing your writing.
+| Piece | Role |
+| --- | --- |
+| Vercel Services | Hosts the app (`frontend` CDN + `backend` Node Function) |
+| Neon Postgres | Accounts, resumes, letters, applications |
+| Vercel Blob (private) | Photos / uploads |
+| Upstash Redis | Rate limits, live updates (required on Vercel) |
 
-You can share a personalised link of your resume to potential employers, track its views or downloads, and customise your page layout by dragging-and-dropping sections. The platform also supports various font options and provides dozens of templates to choose from. And yes, there's even a dark mode for a more comfortable viewing experience.
+---
 
-Start creating your standout resume with Reactive Resume today!
+## Privacy guarantees
 
-## Templates
+**What stays in your stack**
 
-| Azurill                                                      | Bronzor                                                     | Chikorita                                                   |
-| ------------------------------------------------------------ | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| <img src="https://i.imgur.com/jKgo04C.jpeg" width="200px" /> | <img src="https://i.imgur.com/DFNQZP2.jpg" width="200px" /> | <img src="https://i.imgur.com/Dwv8Y7f.jpg" width="200px" /> |
+- Account data, resume JSON, cover letters, job applications → **your Neon**
+- Uploaded pictures/files → **your private Vercel Blob**
+- Session cookies → browser ↔ **your Vercel deployment**
 
-| Ditto                                                       | Kakuna                                                      | Nosepass                                                    |
-| ----------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| <img src="https://i.imgur.com/6c5lASL.jpg" width="200px" /> | <img src="https://i.imgur.com/268ML3t.jpg" width="200px" /> | <img src="https://i.imgur.com/npRLsPS.jpg" width="200px" /> |
+**What does *not* leave your stack (when configured as below)**
 
-| Onyx                                                        | Pikachu                                                     | Rhyhorn                                                     |
-| ----------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| <img src="https://i.imgur.com/cxplXOW.jpg" width="200px" /> | <img src="https://i.imgur.com/Y9f7qsh.jpg" width="200px" /> | <img src="https://i.imgur.com/h4kQxy2.jpg" width="200px" /> |
+- No OpenAI / Anthropic / Gemini / OpenRouter calls (leave shared `AI_*` blank; do not add providers in Settings → AI)
+- No Google/GitHub/LinkedIn OAuth (leave those client IDs blank)
+- No Firecrawl / Tavily / Exa job-search APIs (leave `WEB_ACCESS_*` blank)
+- No built-in third-party analytics or ads (upstream design)
+- No external S3 — Vercel forces private Blob
 
-## Features
+**Still required by Vercel (not telemetry)**
 
-- **Free, forever** and open-source
-- No telemetry, user tracking or advertising
-- You can self-host the application in less then 30 seconds
-- **Available in multiple languages** ([help add/improve your language here](https://translate.rxresu.me/))
-- Use your email address (or a throw-away address, no problem) to create an account
-- You can also sign in with your GitHub or Google account, and even set up two-factor authentication for extra security
-- Create as many resumes as you like under a single account, optimising each resume for every job application based on it’s description for a higher ATS score
-- **Bring your own OpenAI API key** and unlock features such as improving your writing, fixing spelling and grammar or changing the tone of your text in one-click
-- Translate your resume into any language using ChatGPT and import it back for easier editing
-- Create single page resumes or a resume that spans multiple pages easily
-- Customize the colours and layouts to add a personal touch to your resume.
-- Customise your page layout as you like just by dragging-and-dropping sections
-- Create custom sections that are specific to your industry if the existing ones don't fit
-- Jot down personal notes specific to your resume that's only visible to you
-- Lock a resume to prevent making any further edits (useful for master templates)
-- **Dozens of templates** to choose from, ranging from professional to modern
-- Design your resume using the standardised EuroPass design template
-- Supports printing resumes in A4 or Letter page formats
-- Design your resume with any font that's available on [Google Fonts](https://fonts.google.com/)
-- **Share a personalised link of your resume** to companies or recruiters for them to get the latest updates
-- You can track the number of views or downloads your public resume has received
-- Built with state-of-the-art (at the moment) and dependable technologies that's battle tested and peer reviewed by the open-source community on GitHub
-- **MIT License**, so do what you like with the code as long as you credit the original author
-- And yes, there’s a dark mode too 🌓
+- `AUTH_SECRET` — signs your sessions
+- `ENCRYPTION_SECRET` — required by the Vercel build; encrypts AI keys *if* anyone adds them later
+- Upstash Redis — coordination on serverless; data stays in **your** Upstash DB
 
-## Built With
+Optional SMTP: without it, verification emails go to Function logs (fine for a personal instance).
 
-- React (Vite), for the frontend
-- NestJS, for the backend
-- Postgres (primary database)
-- Prisma ORM, which frees you to switch to any other relational database with a few minor changes in the code
-- Redis (for caching, session storage and resume statistics)
-- Minio (for object storage: to store avatars, resume PDFs and previews)
-- Browserless (for headless chrome, to print PDFs and generate previews)
-- SMTP Server (to send password recovery emails)
-- Sentry (for error tracing and performance monitoring)
-- GitHub/Google OAuth (for quickly authenticating users)
-- LinguiJS and Crowdin (for translation management and localization)
+---
 
-## Star History
+## Deploy to Vercel (Adam’s next click)
 
-<a href="https://star-history.com/#AmruthPillai/Reactive-Resume&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AmruthPillai/Reactive-Resume&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AmruthPillai/Reactive-Resume&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=AmruthPillai/Reactive-Resume&type=Date" />
-  </picture>
-</a>
+### Option A — Deploy button (fastest)
 
-## License
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Filodhi%2FResume-builder&project-name=resume-builder&repository-name=Resume-builder&env=AUTH_SECRET%2CENCRYPTION_SECRET&envDescription=Generate+two+independent+secrets+with+openssl+rand+-hex+32.+Keep+these+across+redeploys.+Leave+AI+and+OAuth+blank+for+privacy.&envLink=https%3A%2F%2Fdocs.rxresu.me%2Fself-hosting%2Fvercel&stores=%5B%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%7D%2C%7B%22type%22%3A%22integration%22%2C%22protocol%22%3A%22storage%22%2C%22integrationSlug%22%3A%22upstash%22%2C%22productSlug%22%3A%22upstash-kv%22%7D%2C%7B%22type%22%3A%22blob%22%2C%22access%22%3A%22private%22%7D%5D)
 
-Reactive Resume is packaged and distributed using the [MIT License](/LICENSE.md) which allows for commercial use, distribution, modification and private use provided that all copies of the software contain the same license and copyright.
+1. Click **Deploy**.
+2. Generate two secrets locally and paste them when prompted:
 
-_By the community, for the community._  
-A passion project by [Amruth Pillai](https://www.amruthpillai.com/)
+   ```bash
+   openssl rand -hex 32   # AUTH_SECRET
+   openssl rand -hex 32   # ENCRYPTION_SECRET (different value)
+   ```
 
-<p>
-  <a href="https://www.digitalocean.com/?utm_medium=opensource&utm_source=Reactive-Resume">
-    <img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/PoweredByDO/DO_Powered_by_Badge_blue.svg" width="200px">
-  </a>
-</p>
+3. Approve **Neon**, **Upstash**, and **private Blob**.
+4. In the Vercel project: **Settings → Build and Deployment → Framework Preset → Services**. Keep the repo root (do **not** set root to `apps/web`). Keep committed `vercel.json`.
+5. Deploy. Migrations run during the backend build — you do not run them by hand.
+6. Open `https://YOUR-PROJECT.vercel.app/api/health` — `database`, `storage`, and `redis` should be healthy.
+7. Open the app URL → create **your** account.
+8. (Recommended) Set `FLAG_DISABLE_SIGNUPS=true` in Vercel env and redeploy so only you can register.
+
+### Option B — Existing GitHub repo
+
+1. Import [ilodhi/Resume-builder](https://github.com/ilodhi/Resume-builder) in Vercel.
+2. Framework Preset: **Services**.
+3. Connect Neon + private Blob + Upstash (Marketplace).
+4. Set `AUTH_SECRET` and `ENCRYPTION_SECRET` (Production).
+5. Leave blank: all `AI_*`, `WEB_ACCESS_*`, Google/GitHub/LinkedIn OAuth, `S3_*`.
+6. Deploy.
+
+Full upstream reference: [Self-hosting on Vercel](https://docs.rxresu.me/self-hosting/vercel).
+
+**Hobby note:** This fork schedules career cron **once daily** (`0 0 * * *`) so it fits Vercel Hobby. Pro can restore minute-level scheduling if you want.
+
+---
+
+## Environment (privacy-first)
+
+See [`.env.example`](./.env.example). Highlights:
+
+| Variable | Personal Vercel setup |
+| --- | --- |
+| `AUTH_SECRET` | Required — `openssl rand -hex 32` |
+| `ENCRYPTION_SECRET` | Required on Vercel — separate secret |
+| `DATABASE_URL` / Redis / Blob | Injected by Marketplace |
+| `AI_*` / `WEB_ACCESS_*` | **Leave unset** |
+| OAuth client IDs | **Leave blank** |
+| `S3_*` | **Do not set** on Vercel (Blob only) |
+| `FLAG_DISABLE_SIGNUPS` | `true` after you create your account |
+| `CRON_SECRET` | Optional; needed if you want `/api/career/run` cron |
+
+Never paste Docker’s S3/local URLs into Vercel — the build will refuse non-Blob storage.
+
+---
+
+## Run locally (Docker)
+
+Needs Docker. Node **24** + pnpm are required for non-Docker source builds.
+
+```bash
+git clone https://github.com/ilodhi/Resume-builder.git
+cd Resume-builder
+cp .env.example .env
+# Set AUTH_SECRET and ENCRYPTION_SECRET (openssl rand -hex 32 each)
+docker compose up -d --build
+# Open http://localhost:3000
+```
+
+For source development, follow [Reactive Resume development docs](https://docs.rxresu.me/contributing/development).
+
+---
+
+## Features (upstream Reactive Resume)
+
+Create/edit resumes, templates, live PDF preview, export PDF/Word/Markdown/JSON, cover letters, job application tracker, passkeys/2FA, import JSON Resume / LinkedIn / PDF. Optional AI assistant exists upstream but stays **off** when you leave AI keys empty.
+
+---
+
+## Attribution & license
+
+Based on **Reactive Resume** by Amruth Pillai — [MIT](./LICENSE).  
+Upstream: https://github.com/reactive-resume/reactive-resume  
+Docs: https://docs.rxresu.me
